@@ -1,0 +1,42 @@
+<mujoco model="empty_arena">
+  <asset>
+    <!-- <texture builtin="gradient" height="256" rgb1=".9 .9 1." rgb2=".2 .3 .4" type="skybox" width="256"/> -->
+    <texture builtin="flat" height="256" rgb1="1 1 1" rgb2="1 1 1" type="skybox" width="256"/>
+  </asset>
+  <worldbody>    
+    <light pos="2.0 -2.0 2.0" dir="0.01 0.01 -1" specular="0.3 0.3 0.3" ambient="0.3 0.3 0.3" diffuse="0.3 0.3 0.3" directional="true" castshadow="false"/>
+
+    <!-- front view -->
+    <!-- <camera mode="fixed" name="frontview" pos="1.6 0 1.45" quat="0.56 0.43 0.43 0.56"/> -->
+    <!-- bird view -->
+    <camera pos="7.430 -8.509 3.849" name='sideview' xyaxes="0.735 0.679 0.000 -0.302 0.327 0.895"/>
+    <camera pos="4.956 -2.874 1.665" name='voxview' xyaxes="-0.071 0.998 0.000 -0.294 -0.021 0.956"/>
+
+    <!-- <camera pos="1.453 -4.122 9.475" name='topview' xyaxes="-0.008 -1.000 -0.000 0.996 -0.008 0.091"/> -->
+    <camera pos="1.978 -3.580 14.764" name='topview' xyaxes="-0.009 -1.000 -0.000 0.995 -0.009 0.099"/>
+    <camera mode="fixed" name="routed_u_larged" pos="5.823 -0.266 4.388" xyaxes="-0.834 0.552 0.000 -0.378 -0.572 0.727"/>
+    <camera mode="fixed" name="routed_u_larged_routeA" pos="2.111 -3.351 5.937" xyaxes="-0.000 -1.000 -0.000 0.879 -0.000 0.477"/>
+    <camera mode="fixed" name="routed_g_small" pos="3.242 -9.515 1.459" xyaxes="0.941 0.338 -0.000 -0.079 0.219 0.972"/>
+    <camera mode="fixed" name="routed_u_larged_topview" pos="2.092 -4.381 13.527" xyaxes="-0.001 -1.000 -0.000 1.000 -0.001 0.017"/>
+    <camera mode="fixed" name="routed_one_wall_small_no_wall" pos="-1.406 -1.322 2.806" xyaxes="-0.024 -1.000 0.000 0.499 -0.012 0.867"/>
+    <camera mode="fixed" name="routed_one_wall_small" pos="2.516 -5.857 1.950" xyaxes="0.997 0.075 0.000 -0.032 0.433 0.901"/>
+
+
+    <camera mode="fixed" name="routed_one_wall_large" pos="4.030 1.574 7.486" xyaxes="-1.000 -0.003 -0.000 0.003 -0.802 0.598"/>
+    <camera mode="fixed" name="routed_one_wall_large_topview" pos="2.316 -3.210 12.763" xyaxes="1.000 0.001 0.000 -0.000 1.000 0.017"/>
+    <!-- # side view from human perspective -->
+    <!-- <camera mode="fixed" name="routed_one_wall_small" pos="2.836 -5.629 2.423" xyaxes="1.000 0.025 -0.000 -0.007 0.301 0.954"/> -->
+    <!-- routed_one_wall_small is defined above (5a2cdff7). This second copy
+         duplicated the name, which makes MuJoCo refuse to compile ANY scene;
+         its pose was identical to routed_one_wall_small_no_wall anyway. -->
+    <camera mode="fixed" name="routed_one_wall_small_topview" pos="3.486 -2.593 11.649" xyaxes="-0.002 1.000 0.000 -1.000 -0.002 0.017"/>
+
+
+
+
+    <!-- agent view -->
+    <!-- <camera mode="fixed" name="agentview" pos="0.5 0 1.35" quat="0.653 0.271 0.271 0.653"/> -->
+    <!-- side view -->
+    <!-- <camera mode="fixed" name="sideview" pos="-0.05651774593317116 1.2761224129427358 1.4879572214102434" quat="0.009905065491771751 0.006877963156909582 0.5912228352893879 0.806418094001364" /> -->
+  </worldbody>
+</mujoco>

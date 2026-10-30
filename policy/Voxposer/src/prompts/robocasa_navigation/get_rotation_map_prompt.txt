@@ -1,0 +1,61 @@
+import numpy as np
+from plan_utils import get_empty_rotation_map, set_pixel_by_radius
+from perception_utils import parse_query_obj
+
+# Rotation map = 2D float array of yaw angles in radians (per pixel).
+# Default value is np.nan, which means "no rotation requirement here — keep
+# whatever heading the robot already has". The controller treats NaN cells
+# as no-op (holonomic base sidesteps freely without forced rotation).
+#
+# Only set a scalar yaw at cells where you specifically want the robot to
+# face a direction (e.g. approaching a fixture, looking at a human).
+# Leave the rest as NaN.
+#
+# Yaw to face an object FROM the robot's current location.
+# IMPORTANT: .position is (row, col, z) where row indexes y-world and col
+# indexes x-world (square 5cm-per-cell grid), so:
+#   target_yaw = np.arctan2(obj.position[0] - robot.position[0],   # dy = row diff
+#                           obj.position[1] - robot.position[1])   # dx = col diff
+# Use parse_query_obj('mobile_base').position for the robot pose; do NOT
+# use np.arctan2(obj_y, obj_x) of just the object coords (that is the angle
+# from the world origin, not from the robot).
+
+# Query: no specific rotation requirement.
+rotation_map = get_empty_rotation_map(task='navigation')
+ret_val = rotation_map
+
+# Query: face the door when within 70cm of it.
+rotation_map = get_empty_rotation_map(task='navigation')
+door = parse_query_obj('door')
+robot = parse_query_obj('mobile_base')
+target_yaw = float(np.arctan2(door.position[0] - robot.position[0],
+                              door.position[1] - robot.position[1]))
+set_pixel_by_radius(rotation_map, door, radius_cm=70, value=target_yaw)
+ret_val = rotation_map
+
+# Query: face the coffee machine when within 50cm.
+rotation_map = get_empty_rotation_map(task='navigation')
+coffee = parse_query_obj('coffee_machine')
+robot = parse_query_obj('mobile_base')
+target_yaw = float(np.arctan2(coffee.position[0] - robot.position[0],
+                              coffee.position[1] - robot.position[1]))
+set_pixel_by_radius(rotation_map, coffee, radius_cm=50, value=target_yaw)
+ret_val = rotation_map
+
+# Query: face the FRONT of the sink when standing in front of it (50cm).
+# Use fixture_front (sim-provided "approach yaw") instead of robot→fixture
+# arctan2 — fixture_front is the yaw a robot should hold to be aligned with
+# the fixture's mounted face (matches env's compute_robot_base_placement_pose).
+rotation_map = get_empty_rotation_map(task='navigation')
+sink = parse_query_obj('sink')
+set_pixel_by_radius(rotation_map, sink, radius_cm=50, value=float(sink.fixture_front))
+ret_val = rotation_map
+
+# Query: face the human directly when next to them.
+rotation_map = get_empty_rotation_map(task='navigation')
+human = parse_query_obj('human')
+robot = parse_query_obj('mobile_base')
+target_yaw = float(np.arctan2(human.position[0] - robot.position[0],
+                              human.position[1] - robot.position[1]))
+set_pixel_by_radius(rotation_map, human, radius_cm=80, value=target_yaw)
+ret_val = rotation_map

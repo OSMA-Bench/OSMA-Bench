@@ -1,0 +1,179 @@
+I am a wheeled robot in a kitchen, seen from directly above. I need to drive to the
+yellow star. I am not asking you where to go — an optimizer works that out. I am asking
+you what the route must satisfy.
+
+WHAT IS IN THE PICTURE
+
+  green ring        where I am now; the small green wedge is the way I face
+  yellow star       where I must end up
+  blue diamonds     the things in the room I might drive past. Each diamond carries a
+                    letter; this list says what that letter is. Some I only need to
+                    avoid bumping, others need real room — that is for you to judge
+                    from what they are:
+
+{objects}
+
+  numbered circles  places I can stand. They are all on clear floor — I checked. You
+                    will use these numbers to say where each phase of the drive ends.
+
+WHAT I NEED FROM YOU
+
+Split the drive into phases, then say what each phase must satisfy.
+
+A phase is a stretch of the drive that is about one thing — say, "pass behind the
+person". Use as few as the drive really has: if nothing along the way needs special
+treatment, one phase is the right answer. Split only where the thing the drive is
+about actually changes. Four is the most you may use.
+
+For each phase, write constraints as Python. Every constraint returns a number:
+zero or less means satisfied, above zero means violated by that amount.
+
+  subgoal constraint — must hold WHERE THE PHASE ENDS. Takes a single pose.
+
+      progress_cost(state, kp, tol)        end within tol metres of kp
+      heading_cost(state, kp, tol_rad)     end facing kp, within tol_rad radians
+      standoff_cost(state, kp, min_d)      end at least min_d metres from kp
+
+  path constraint — must hold THROUGHOUT the phase. Takes the whole path.
+
+      clearance_cost(traj, kp, margin)     stay at least margin metres from kp
+
+`state` is `(x, y, yaw)`. `kp` is an object from the list above, addressed by its own
+name as written there — `keypoints['<the name>']`, never the letter, and never a name
+that is not in the list. `tol`, `min_d` and `margin` are metres; you choose them.
+
+The yellow star is `keypoints['GOAL']`. Aim at it with `progress_cost` or
+`heading_cost` if a phase should end there. Never ask me to keep clear of it — it is
+where I must end up.
+
+WHERE EACH PHASE ENDS
+
+Say it with the numbers on the circles, as one list at the end — one entry per phase,
+in order. Use `-1` for a phase that ends at the star itself.
+
+    stop_points = [<circle>, -1]   # phase 1 ends at a circle, phase 2 at the star
+
+Pick the circle that is a good place to be *after* that phase is done — past the thing
+you were working around, with room to spare. It does not have to be near the star.
+The last phase should almost always be `-1`.
+
+Every phase needs at least one subgoal constraint or a stop point, or nothing moves me
+forward. I add the final "reach the star" constraint myself.
+
+WHICH THINGS TO NAME
+
+Go through the list above and decide for each one whether it sits on my way. Name
+**every** thing that does, one constraint each, with its own margin — not just the
+most obvious one. Two things on the route need two constraints; if I only hear about
+the person, I will drive straight through the bottle.
+
+Say nothing about things that are off my route or built into the wall. A list of
+constraints for objects I will never pass costs me route with no safety gained.
+
+HOW MUCH ROOM TO ASK FOR
+
+Pick the number from what the thing is. Something alive or moving needs real room;
+something delicate needs some; a sturdy fixture needs little. Anchors, in metres:
+
+    alive or moving (a person, a pet, a crawling child)     0.6 – 0.8
+    delicate or easily knocked over (a bottle, a vase)      0.3 – 0.4
+    sturdy and inert (a bin, a weight, a cabinet)           0.2 – 0.25
+
+Never ask for so much room that no route is left. I am 0.43 m across and some of the
+gaps here are barely wider than that — a margin of 1.5 m around something in the
+middle of the room can leave me no way through at all.
+
+EXAMPLES
+
+Each example lists what was in that scene, then the answer for it.
+
+The examples are other kitchens. **None of their names will be in your table.** Read
+your own list and name what is actually in front of you - copying a name from an
+example is the one mistake that cannot be recovered from, because the thing you were
+supposed to avoid then has no constraint on it at all.
+
+```python
+# what was in that scene:  A = fridge   B = dishwasher   C = GOAL
+# Query: drive to the star.
+# Reasoning: both are built-in fixtures against the wall, nothing is in the way.
+#            One phase is the whole answer.
+# STAGES: 1
+# 1: Drive to the star
+
+def stage1_subgoal_constraint1(state, keypoints):
+    """Nothing to work around; go straight to the star."""
+    return progress_cost(state, keypoints['GOAL'], 0.3)
+
+stop_points = [-1]
+```
+
+```python
+# what was in that scene:  A = stepladder   B = stove   C = GOAL
+# Query: drive to the star.
+# Reasoning: the ladder stands on the floor on my route. It is inert and low, so a
+#            small margin is enough. The stove is against the wall, not on my route.
+# STAGES: 1
+# 1: Pass the ladder and reach the star
+
+def stage1_path_constraint1(traj, keypoints):
+    """Hold a small margin from the ladder the whole way past."""
+    return clearance_cost(traj, keypoints['stepladder'], 0.25)
+
+def stage1_subgoal_constraint1(state, keypoints):
+    """End at the star."""
+    return progress_cost(state, keypoints['GOAL'], 0.3)
+
+stop_points = [-1]
+```
+
+```python
+# what was in that scene:  A = plumber   B = porcelain_bowl   C = sink   D = GOAL
+# Query: drive to the star.
+# Reasoning: the person is alive and may shift, so they get real room and their own
+#            phase — getting past them and arriving are two different things. The
+#            bowl is delicate but off to the side; a modest margin covers it.
+# STAGES: 2
+# 1: Get past the person with room to spare
+# 2: Come up to the star
+
+def stage1_subgoal_constraint1(state, keypoints):
+    """Finish this phase already clear of the person."""
+    return standoff_cost(state, keypoints['plumber'], 0.7)
+
+def stage1_path_constraint1(traj, keypoints):
+    """A person may shift; hold the margin the whole way past."""
+    return clearance_cost(traj, keypoints['plumber'], 0.7)
+
+def stage2_path_constraint1(traj, keypoints):
+    """Do not clip the bowl on the way in."""
+    return clearance_cost(traj, keypoints['porcelain_bowl'], 0.35)
+
+def stage2_subgoal_constraint1(state, keypoints):
+    """End at the star."""
+    return progress_cost(state, keypoints['GOAL'], 0.3)
+
+stop_points = [<the circle you picked>, -1]
+```
+
+{dynamics}YOUR ANSWER
+
+Answer with only the code block and nothing else. Use this exact shape, with one
+`STAGES:` line first:
+
+```python
+# STAGES: <n>
+# <one such line per phase, numbered from 1: what that phase is about>
+
+def stage1_subgoal_constraint1(state, keypoints):
+    """<why, in one line>"""
+    return <one call from the subgoal list>
+
+def stage1_path_constraint1(traj, keypoints):
+    """<why, in one line>"""
+    return <one call from the path list>
+{pace_slot}
+stop_points = [<circle number per phase, in order; -1 for the star>]
+```
+
+Number the functions so no two share a name. A phase with no path constraint simply
+has none written.

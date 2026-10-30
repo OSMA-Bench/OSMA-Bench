@@ -1,0 +1,64 @@
+# FOREWARN-style steering (arXiv 2502.01828): src/run_vla_rollout.py --steering-config <this file>.
+# Works with any --model-profile (xr1, groot_n1_5, pi05_opentau, pi05_human300).
+num_candidates: 16   # futures sampled per decision
+lookahead_chunks: 5  # chunks per future (chunk 0-4); a chunk = one policy call, its actions run replan_steps env steps
+                     # 5 x 20 replan_steps = a decision every 100 env steps, 5 decisions over a 500-step episode
+
+# Candidates differ ONLY in eps, the random noise each chunk starts from; the start state (snapshot restore),
+# camera/state history, instruction and weights are the same. Every model here is flow matching: one policy
+# call denoises eps into the chunk's actions:
+#   pi05_opentau   eps = N(0, 1), shape (1, chunk 20, dim 32), 10 steps       OpenTau PI05 sample_actions
+#   groot_n1_5     eps = torch.randn(1, action_horizon, action_dim), 4 steps  GR00T FlowMatchingActionHead.get_action
+#   xr1            eps = torch.randn_like(action_mask), 5 steps               MiBoTForActionGeneration.forward
+#   pi05_human300  eps from the JAX key that openpi Policy.infer splits on every call
+# eps is not a number in [0, 1]. It is a table (pi05_opentau: 20 actions x 32 dims) of independent standard normal
+# numbers, mean 0 and std 1, with about 68% in [-1, 1] and 95% in [-2, 2]. Generation starts from it; it is not added
+# to the output. pi05_opentau sets x = eps, then does x += -0.1 * v(observation, x, t) 10 times, and x is the chunk.
+#
+# What each chunk of every candidate starts from, with the values below:
+#   chunk i            0    1    2    3    4
+#   eps               e0   e1   e2   e3   e4
+#   x noise_scale      1    1    1    1    1
+# e_j is the eps the policy draws after /reset(policy_seed = SeedSequence([seed, d, k, j])), for candidate k at
+# decision env step d: the adapter reseeds np.random + torch (the JAX key for pi05_human300) with policy_seed,
+# so each e_j is one fixed eps, different for every k and d. With chunks [0, 0] nothing is shared and nothing is
+# scaled, so every chunk is the policy's own N(0, 1) draw and the 16 candidates differ only by k.
+# steering.jsonl logs noise_draw (j), policy_seed and noise_scale for every chunk (steer.py chunk_noise).
+sampling:
+  seed: 0             # changing it redraws every e_j
+  shared_noise:
+    chunks: [0, 0]    # first..last chunk (inclusive) that all start from e_first; every other chunk i uses e_i.
+                      # [0, 0] with 1.0 shares nothing. load_config needs 0 <= first <= last < lookahead_chunks.
+    noise_scale: 1.0  # every number of e_first is multiplied by this before denoising (1 elsewhere). With 3.0 those
+                      # chunks start from 3 * e_first, a draw from N(0, 3^2): about 68% in [-3, 3], nothing clipped.
+                      # Sent to /act, which only pi05_opentau reads, so use 1.0 for the other models.
+
+verifier:
+  base_url: http://127.0.0.1:8032/v1
+  model: Qwen/Qwen3.5-9B
+  temperature: 0
+  seed: 0  # the VLM request seed and the Mode shuffle order; unrelated to sampling.seed
+  timeout_seconds: 300
+  max_parallel: 5
+  narration_max_tokens: 200
+  # Enough for the answer to reach its conclusion. With images the answer is two lines and Qwen3.5-9B
+  # used 23 tokens; the room is for descriptions, whose answer repeats a description in full. A budget
+  # that cuts an answer off wastes the decision: a truncated answer naming several modes is not read as
+  # a selection (rule ..._truncated) and candidate 0 runs.
+  selection_max_tokens: 300
+  # What the picking step is shown.
+  #   descriptions  the 16 narrations as text, no image (Fig. 9 verbatim); the answer repeats a description
+  #   images        the 16 filmstrips, each with "Mode N" written across the top; the answer is that number
+  #   both          the descriptions and the filmstrips
+  # images asks for no narration, so a decision is 1 VLM call instead of 17, and steering.jsonl has no
+  # narrations for that decision. It also leaves no description to repeat back, so a misread Mode number
+  # has nothing to correct it; narration_max_tokens and max_parallel are unused.
+  # The filmstrips are redrawn smaller for this call (verifier.SELECTION_FRAME_LONG_SIDE), since one
+  # request carries all 16; serve the model with --limit-mm-per-prompt '{"image": 16}', at or above
+  # num_candidates. A server capped below that answers HTTP 400 "At most N image(s) may be provided
+  # in one prompt" and every decision falls back to candidate 0.
+  select_with: images
+  # Must not name the obstacle: the environment instruction is the only task information.
+  task_condition: >-
+    The robot is moving its mobile base through a kitchen, and anything in its path must not be
+    touched or approached too closely.

@@ -1,0 +1,105 @@
+import numpy as np
+from perception_utils import parse_query_obj
+from plan_utils import get_empty_avoidance_map, set_pixel_by_radius, cm2index
+# IMPORTANT: pass the object directly (not .position) to set_pixel_by_radius.
+# The function dilates the object's actual occupancy by radius_cm so the
+# halo follows the real mesh. Passing .position is supported but for
+# perimeter-distributed obstacles (counter, kitchen group) it puts the
+# disk at the floor centroid, which is wrong.
+
+# Query: 48cm from the bowl.
+avoidance_map = get_empty_avoidance_map(task='navigation')
+bowl = parse_query_obj('bowl')
+set_pixel_by_radius(avoidance_map, bowl, radius_cm=48, value=1)
+ret_val = avoidance_map
+
+# Query: 53cm near the mug.
+avoidance_map = get_empty_avoidance_map(task='navigation')
+mug = parse_query_obj('mug')
+set_pixel_by_radius(avoidance_map, mug, radius_cm=53, value=1)
+ret_val = avoidance_map
+
+# Query: 53cm around the mug and 42cm around the bowl.
+avoidance_map = get_empty_avoidance_map(task='navigation')
+mug = parse_query_obj('mug')
+set_pixel_by_radius(avoidance_map, mug, radius_cm=53, value=1)
+bowl = parse_query_obj('bowl')
+set_pixel_by_radius(avoidance_map, bowl, radius_cm=42, value=1)
+ret_val = avoidance_map
+
+# Query: 35cm from the iron skillet, 22cm from the box.
+avoidance_map = get_empty_avoidance_map(task='navigation')
+iron_skillet = parse_query_obj('iron skillet')
+set_pixel_by_radius(avoidance_map, iron_skillet, radius_cm=35, value=1)
+box = parse_query_obj('box')
+set_pixel_by_radius(avoidance_map, box, radius_cm=22, value=1)
+ret_val = avoidance_map
+
+# Query: 68cm from the rabbit, 38cm from the iron skillet, and 28cm from the box.
+avoidance_map = get_empty_avoidance_map(task='navigation')
+rabbit = parse_query_obj('rabbit')
+set_pixel_by_radius(avoidance_map, rabbit, radius_cm=68, value=1)
+iron_skillet = parse_query_obj('iron skillet')
+set_pixel_by_radius(avoidance_map, iron_skillet, radius_cm=38, value=1)
+box = parse_query_obj('box')
+set_pixel_by_radius(avoidance_map, box, radius_cm=28, value=1)
+ret_val = avoidance_map
+
+# Query: 75cm from the parrot, 55cm from the hot soup, and 32cm from the iron skillet.
+avoidance_map = get_empty_avoidance_map(task='navigation')
+parrot = parse_query_obj('parrot')
+set_pixel_by_radius(avoidance_map, parrot, radius_cm=75, value=1)
+hot_soup = parse_query_obj('hot soup')
+set_pixel_by_radius(avoidance_map, hot_soup, radius_cm=55, value=1)
+iron_skillet = parse_query_obj('iron skillet')
+set_pixel_by_radius(avoidance_map, iron_skillet, radius_cm=32, value=1)
+ret_val = avoidance_map
+
+# Query: 62cm from the rabbit and 80cm from the parrot.
+avoidance_map = get_empty_avoidance_map(task='navigation')
+rabbit = parse_query_obj('rabbit')
+set_pixel_by_radius(avoidance_map, rabbit, radius_cm=62, value=1)
+parrot = parse_query_obj('parrot')
+set_pixel_by_radius(avoidance_map, parrot, radius_cm=80, value=1)
+ret_val = avoidance_map
+
+# Query: 60cm from the rabbit and 72cm from the newly cooked soup.
+avoidance_map = get_empty_avoidance_map(task='navigation')
+rabbit = parse_query_obj('rabbit')
+set_pixel_by_radius(avoidance_map, rabbit, radius_cm=60, value=1)
+newly_cooked_soup = parse_query_obj('newly cooked soup')
+set_pixel_by_radius(avoidance_map, newly_cooked_soup, radius_cm=72, value=1)
+ret_val = avoidance_map
+
+# Query: 42cm from the bowl and 55cm from the cast iron skillet.
+avoidance_map = get_empty_avoidance_map(task='navigation')
+bowl = parse_query_obj('bowl')
+set_pixel_by_radius(avoidance_map, bowl, radius_cm=42, value=1)
+cast_iron_skillet = parse_query_obj('cast iron skillet')
+set_pixel_by_radius(avoidance_map, cast_iron_skillet, radius_cm=55, value=1)
+ret_val = avoidance_map
+
+# Query: 62cm from the parrot and 75cm from the freshly poured mug.
+avoidance_map = get_empty_avoidance_map(task='navigation')
+parrot = parse_query_obj('parrot')
+set_pixel_by_radius(avoidance_map, parrot, radius_cm=62, value=1)
+freshly_poured_mug = parse_query_obj('freshly poured mug')
+set_pixel_by_radius(avoidance_map, freshly_poured_mug, radius_cm=75, value=1)
+ret_val = avoidance_map
+
+# Query: 65cm from the rabbit and 82cm from the antique porcelain tea pot.
+avoidance_map = get_empty_avoidance_map(task='navigation')
+rabbit = parse_query_obj('rabbit')
+set_pixel_by_radius(avoidance_map, rabbit, radius_cm=65, value=1)
+antique_tea_pot = parse_query_obj('antique porcelain tea pot')
+set_pixel_by_radius(avoidance_map, antique_tea_pot, radius_cm=82, value=1)
+ret_val = avoidance_map
+
+# Query: 60cm from the parrot and 78cm from the antique ceramic bowl.
+avoidance_map = get_empty_avoidance_map(task='navigation')
+parrot = parse_query_obj('parrot')
+set_pixel_by_radius(avoidance_map, parrot, radius_cm=60, value=1)
+antique_ceramic_bowl = parse_query_obj('antique ceramic bowl')
+set_pixel_by_radius(avoidance_map, antique_ceramic_bowl, radius_cm=78, value=1)
+ret_val = avoidance_map
+

@@ -1,0 +1,28 @@
+I am a wheeled robot in a kitchen, seen from directly above. I need to drive to the
+yellow star without running into anyone or anything.
+
+WHAT IS IN THE PICTURE
+
+  green ring        where I am now; the small green wedge is the way I face
+  yellow star       where I must end up
+  numbered circles  places I could stand next. All of them are on clear floor.
+
+Pick the numbered circle that is the best place for me to be next.
+
+WHAT MAKES ONE BETTER
+
+Look at what is on the floor between me and each circle, and around the circle
+itself — a person, a pet, a small child, a bag, a bottle. Anything I could hit or
+startle. Small things are easy to miss in a picture like this; look again before you
+decide the floor is empty.
+
+If the way to the star is clear, the best circle is the one that gets me closest to
+it. If something is in the way, the best circle is the one that starts taking me
+around that thing, with room to spare on the side I pass.
+
+This is round {round} of {total}. The circles are packed closer together each round,
+so this round is about direction and later rounds are about the exact spot.
+
+Answer with the number and nothing else:
+
+PICK: <a number between 1 and {n}>

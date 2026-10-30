@@ -1,0 +1,259 @@
+task:
+  robot: "PandaOmron"
+  camera_widths: 640
+  camera_heights: 480
+  camera_names: ['robot0_robotview', 'robot0_agentview_center', 'robot0_agentview_left', 'robot0_agentview_right', 'robot0_frontview', 'robot0_eye_in_hand']
+  layout_ids: -1   # -1 = all 10 layouts (random sampling per episode)
+  style_ids: 0    # fixed COASTAL/INDUSTRIAL... (style 0)
+  offscreen_render: True
+
+# task-type specific overrides
+navigation:
+  env_name: robocasa_navigation
+  task:
+    camera_names: ['robot0_robotview', 'robot0_agentview_center', 'robot0_agentview_left', 'robot0_agentview_right', 'robot0_frontview', 'robot0_eye_in_hand', 'topview', 'sideview', 'posed_human_main_group_1stview']
+  planner:
+    use_astar: true                    # W1: replace greedy descent with global A*
+    stop_threshold: 0.01
+    obstacle_map_gaussian_sigma: 5
+    max_curvature: 5                   # v6 winner config (15 reverted, no significant gain)
+    obstacle_map_weight: 5
+    # Enforce the commanded avoidance radius.
+    #
+    # The avoidance halo decays from 1.0 at the obstacle mesh to 0.0 at the
+    # commanded radius. A* used to block only cells above 0.5, so barely half
+    # the commanded radius was ever off-limits -- a 160 cm command yielded
+    # 0.75 m of actual clearance. Worse, when no path was found the blocked
+    # mask was dropped entirely, letting the robot walk straight through.
+    #
+    # With this on, the whole halo is impassable and a blocked scene fails
+    # instead of silently relaxing. Default on: the benchmark measures whether
+    # a policy keeps its distance, which only means something if the distance
+    # is actually enforced. Set to false to reproduce the old soft behaviour.
+    hard_avoidance: true
+    # Also drop the "goal cells are never blocked" exemption. On, because it is
+    # what every run on record actually used — the runner exports
+    # VOXPOSER_STRICT_GOAL=1 and the env var wins over this file, so leaving it
+    # false here documented a configuration nothing was ever measured under.
+    # The setting barely matters either way: measured effect is under 1 pp,
+    # since the goal region always keeps some cells outside the halo (0 of 128
+    # episodes had it fully swallowed).
+    strict_goal: true
+  navigation_controller:
+    yaw_threshold: 0.35                # v6 winner config (0.45 reverted, no significant gain)
+    dist_threshold: 0.05
+    max_steps_per_waypoint: 100
+    mode: holonomic                    # holonomic | translate_only (env NAV_MODE overrides)
+  lmp_config:
+    env:
+      visualize: False
+    lmps:
+      get_gripper_map: null
+
+manipulation:
+  env_name: robocasa_manipulation
+  task:
+    camera_names: ['robot0_robotview', 'robot0_agentview_center', 'robot0_agentview_left', 'robot0_agentview_right', 'robot0_frontview', 'robot0_eye_in_hand']
+  planner:
+    stop_threshold: 0.001
+    obstacle_map_gaussian_sigma: 10
+    max_curvature: 3
+  controller:
+    horizon_length: 1
+  lmp_config:
+    env:
+      # Re-plan each executed map up to 4x: push targets recompute from the
+      # LIVE panel position, so successive iterations keep pushing the drawer/
+      # door shut (single iter left CloseDrawer at door_state 0.93 vs <0.05).
+      max_plan_iter: 8
+      # 3D cube voxel map. workspace bounds are NOT set here — they are
+      # computed at runtime from the scene point cloud min/max in
+      # robocasa_env.get_scene_3d_obs() (self.workspace_bounds_min/max),
+      # consumed by interfaces._world_to_voxel / _voxel_to_world.
+      map_size: 100
+  visualizer:
+    # 3D ValueMapVisualizer rendering knobs. render_mode + the keys below
+    # are consumed by the Task-7 visualizer (config-only until then).
+    render_mode: scatter        # scatter(light) | volume | auto
+    downsample_ratio: 2
+    costmap_opacity: 0.1
+    costmap_surface_count: 8
+    max_scene_points: 12000
+    voxel_scatter_threshold: 0.7
+    max_voxel_points: 3000
+    scene_scale: [1, 1, 1]
+
+# shared defaults
+planner:
+  savgol_polyorder: 3
+  savgol_window_size: 20
+  obstacle_map_weight: 1
+  max_steps: 300
+  target_map_weight: 2
+  stop_criteria: no_nearby_equal
+  # target_spacing: % of map_size between adjacent waypoints.
+  # 100×100 grid (5cm/cell) → 5% = 5 cells = 25cm spacing.
+  # Combined with L=0.15 lookahead and asymmetric controller gains
+  # (kp_trans=10, kp_rot=3, omega_max=1.0) for stable convergence.
+  target_spacing: 5
+  pushing_skip_per_k: 5
+
+controller:
+  horizon_length: 1
+  num_samples: 10000
+  ee_local: temperature
+  ee_local_radius: 0.15
+
+visualizer:
+  save_dir: ./visualizations
+  quality: low
+  map_size: 100
+
+llm_api:
+  base_url: "http://172.17.0.1:8000/v1"
+  api_key: "api-key-not-required"
+
+# LLM cache: persists chat-completion results to disk so identical
+# (model + messages + sampling params) calls reuse stored output.
+# Skipped automatically for VLM models (image bytes vary per call).
+# Override via env vars: LMP_DISABLE_CACHE=1, LMP_CACHE_DIR=path
+lmp_cache:
+  enabled: true
+  cache_dir: cache
+
+lmp_config:
+  env:
+    map_size: 100
+    num_waypoints_per_plan: 10000
+    max_plan_iter: 1
+    visualize: True
+    # When True, parse_query_obj() auto-resolves kitchen fixtures
+    # (coffee_machine, sink, stove, fridge, microwave, oven, dishwasher)
+    # to their fixture.pos reference frame instead of the visible
+    # point-cloud centroid. Centroid can be 30cm–1m off the goal-success
+    # anchor; the fix closes that gap for affordance / avoidance maps.
+    # Movable obstacles (cat, dog, human, ...) are not in the fixtures
+    # registry so they always use centroid (correct for avoidance halo).
+    use_fixture_pos: True
+  lmps:
+    planner:
+      prompt_fname: planner_prompt
+      # Default prompt_extra: empty (Qwen baseline). Model-specific overrides below.
+      prompt_extra: ''
+      model_prompts:
+        # Models that fail to call composer() without explicit instruction
+        deepseek: "IMPORTANT: Your output MUST contain ONLY composer() calls — nothing else. Do NOT define functions, classes, dictionaries, or variables. Do NOT use names like safety_radii, velocity_multipliers, or any variable not in the examples. Just call composer() with a natural language description, exactly like the examples above, then write # done."
+        llava: "IMPORTANT: Your output MUST call the composer() function at least once. Do NOT define helper functions, dictionaries, or classes. Just call composer() with a natural language description of the navigation action, exactly like the examples above."
+        internvl: "IMPORTANT: Your output MUST call the composer() function at least once. Do NOT define helper functions, dictionaries, or classes. Just call composer() with a natural language description of the navigation action, exactly like the examples above."
+        gpt-oss: "IMPORTANT: Your output MUST contain ONLY composer() calls — nothing else. Do NOT define functions, classes, dictionaries, or variables. Just call composer() with a natural language description, exactly like the examples above, then write # done."
+        glm: "IMPORTANT: Your output MUST call the composer() function at least once. Do NOT define helper functions, dictionaries, or classes. Do NOT repeat the objects list or query. Just call composer() with a natural language description of the navigation action, exactly like the examples above, then write # done."
+
+      max_tokens: 4096
+      temperature: 0
+      query_prefix: '# Query: '
+      query_suffix: '.'
+      stop:
+        - "\n# Query: "
+        - "\nobjects = "
+      maintain_session: False
+      include_context: True
+      has_return: False
+      return_val_name: ret_val
+    composer:
+      prompt_fname: composer_prompt
+
+      max_tokens: 4096
+      temperature: 0
+      query_prefix: '# Query: '
+      query_suffix: '.'
+      stop:
+        - "\n# Query: "
+        - "\nobjects ="
+      maintain_session: False
+      include_context: False
+      has_return: False
+      return_val_name: ret_val
+    parse_query_obj:
+      prompt_fname: parse_query_obj_prompt
+
+      max_tokens: 4096
+      temperature: 0
+      query_prefix: '# Query: '
+      query_suffix: '.'
+      stop:
+        - "\n# Query: "
+        - "\nobjects ="
+      maintain_session: False
+      include_context: True
+      has_return: True
+      return_val_name: ret_val
+    get_affordance_map:
+      prompt_fname: get_affordance_map_prompt
+
+      max_tokens: 4096
+      temperature: 0
+      query_prefix: '# Query: '
+      query_suffix: '.'
+      stop:
+        - "\n# Query: "
+        - "\nobjects ="
+      maintain_session: False
+      include_context: False
+      has_return: True
+      return_val_name: ret_val
+    get_avoidance_map:
+      prompt_fname: get_avoidance_map_prompt
+
+      max_tokens: 4096
+      temperature: 0
+      query_prefix: '# Query: '
+      query_suffix: '.'
+      stop:
+        - "\n# Query: "
+        - "\nobjects ="
+      maintain_session: False
+      include_context: False
+      has_return: True
+      return_val_name: ret_val
+    get_velocity_map:
+      prompt_fname: get_velocity_map_prompt
+
+      max_tokens: 4096
+      temperature: 0
+      query_prefix: '# Query: '
+      query_suffix: '.'
+      stop:
+        - "\n# Query: "
+        - "\nobjects ="
+      maintain_session: False
+      include_context: False
+      has_return: True
+      return_val_name: ret_val
+    get_rotation_map:
+      prompt_fname: get_rotation_map_prompt
+
+      max_tokens: 4096
+      temperature: 0
+      query_prefix: '# Query: '
+      query_suffix: '.'
+      stop:
+        - "\n# Query: "
+        - "\nobjects ="
+      maintain_session: False
+      include_context: False
+      has_return: True
+      return_val_name: ret_val
+    get_gripper_map:
+      prompt_fname: get_gripper_map_prompt
+
+      max_tokens: 4096
+      temperature: 0
+      query_prefix: '# Query: '
+      query_suffix: '.'
+      stop:
+        - "\n# Query: "
+        - "\nobjects ="
+      maintain_session: False
+      include_context: False
+      has_return: True
+      return_val_name: ret_val

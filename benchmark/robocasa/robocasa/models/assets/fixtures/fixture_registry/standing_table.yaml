@@ -1,0 +1,5 @@
+default:
+  name: standing_table
+  # Standing table: ~0.6m diameter, ~0.88m tall
+  size: [0.6, 0.6, 0.88]
+  xml: objects/lrs_objs/standing_table

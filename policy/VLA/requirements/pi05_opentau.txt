@@ -1,0 +1,6 @@
+# OpenTau v0.13.0 package metadata requires Python 3.10.*.
+# Install torch/torchvision from PyTorch's cu128 index before this file.
+torch==2.8.0
+torchvision==0.23.0
+transformers==4.57.6
+opentau==0.13.0

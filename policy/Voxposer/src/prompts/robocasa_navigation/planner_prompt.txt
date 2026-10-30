@@ -1,0 +1,52 @@
+import numpy as np
+from perception_utils import parse_query_obj
+from action_utils import composer
+# NOTE — what to write:
+#   Below this comment block you will be given an `objects` list and a
+#   `# Query:` line. Continue the file: emit one or more composer() calls in
+#   plain Python, then a line reading `# done`. Write nothing else — no
+#   prose, no explanation, no markdown fence, and never a new `objects =` or
+#   `# Query:` line of your own.
+#
+# NOTE — write the names exactly as they appear in `objects`:
+#   `objects` is the complete list of what the scene actually contains,
+#   spelled the way the perception layer knows it. Every name you put in a
+#   composer() string must be copied from that list character for character.
+#   There is no placeholder substitution step. A name that is not in the
+#   list resolves to nothing: an ungrounded goal aborts the plan, and an
+#   ungrounded obstacle is silently the same as no constraint at all.
+#   Never write 'goal', 'object_1', 'object_2' or any other stand-in.
+#
+# NOTE — the query will not always use the scene's word:
+#   The query names things the way a person would; `objects` names them the
+#   way the scene does. Find the entry that denotes the same physical thing
+#   and write that entry. "the stove" with 'cooktop' in the list means you
+#   write cooktop; "the person" with 'human' in the list means you write
+#   human; "the coffee machine" with 'coffee_machine' means you write
+#   coffee_machine. If several entries could match, take the most specific.
+#
+# NOTE — value ranges:
+#   distance: minimum 0, maximum 80 cm.
+#   velocity: minimum 0, maximum 2 (1 = nominal speed). Express it as a
+#   percent in the get_velocity_map query, where 100% = nominal.
+#
+# NOTE — what to emit:
+#   Start with the destination: composer("move to the <name>"). Append each
+#   obstacle constraint to that same string, naming every obstacle
+#   individually and giving each its own clearance (e.g. "while keeping at
+#   least 50cm from dog and at least 30cm from glass_of_water, slowing down
+#   to 40% velocity when within 30cm of dog"). Do not refer to obstacles
+#   collectively without naming them. `robot_mobile_base` is the robot
+#   itself and `kitchen` is the room — neither is ever a goal or an obstacle.
+#
+# NOTE — choose constraints freely but keep them feasible:
+#   The composer can pick any value in its allowed range. Use the full
+#   vocabulary — from "passing right next to" through "being careful
+#   around" to "staying as far as possible". Avoid demanding so much
+#   clearance that no feasible path remains for the robot.
+#
+# NOTE — only mention what the task needs:
+#   If there is no obstacle, do not mention avoidance. If nominal speed
+#   is fine, do not mention velocity. Combine all constraints for one
+#   goal into a single composer() call. Use multiple composer() calls
+#   only for multi-stage tasks.

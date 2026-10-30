@@ -1,0 +1,15 @@
+[
+  {
+    "layout": 0,
+    "layout_name": "ONE_WALL_SMALL",
+    "route": "RouteA",
+    "endpoints": "Fridge>Coffee",
+    "obstacle": "Cat",
+    "n_plan_iters": 1,
+    "n_waypoints": 16,
+    "path_len_m": 4.558,
+    "straight_m": 4.382,
+    "detour_ratio": 1.04,
+    "planned_clearance_m": 1.348
+  }
+]

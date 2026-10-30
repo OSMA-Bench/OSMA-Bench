@@ -1,0 +1,55 @@
+HOW FAST TO GO — one setting per phase
+
+Besides where the route goes, you may say how fast I should be driven **on a phase**.
+The phase is the section: whatever you set applies from where that phase begins to
+where it ends. You do not give percentages or radii — the phases already cut the drive
+into sections.
+
+  pace constraint — applies to THE WHOLE PHASE. Takes the path of that phase.
+
+      speed_cost(traj, v_max)     drive this phase at v_max metres per second or less
+      accel_cost(traj, a_max)     keep acceleration under a_max m/s²
+      jerk_cost(traj, j_max)      keep jerk under j_max m/s³
+
+I cruise at about 0.5 m/s when nothing is around. Some anchors:
+
+    creeping past something alive, or through a gap barely wider than me   0.15 – 0.25
+    careful, but still making progress                                     0.3 – 0.4
+    nothing nearby; no reason to hold back                                 0.5 (leave it out)
+
+Say nothing about speed for a phase that has no reason to be slow — a phase driven
+at 0.2 m/s takes three times as long, and I have a step budget.
+
+Name these functions `stageN_pace_constraintM`. Example — creep past the toddler, then
+drive normally to the star:
+
+```python
+# what was in that scene:  A = toddler   B = sink   C = GOAL
+# Query: drive to the star.
+# Reasoning: a crawling child is alive, low, and may move without warning. Room is not
+#            enough on its own — I should also be slow while I am next to them, so a
+#            sudden move still leaves time. Once past, there is no reason to crawl.
+# STAGES: 2
+# 1: Creep past the toddler
+# 2: Drive on to the star
+
+def stage1_subgoal_constraint1(state, keypoints):
+    """Finish this phase already clear of the toddler."""
+    return standoff_cost(state, keypoints['toddler'], 0.7)
+
+def stage1_path_constraint1(traj, keypoints):
+    """Hold the margin the whole way past."""
+    return clearance_cost(traj, keypoints['toddler'], 0.7)
+
+def stage1_pace_constraint1(traj, keypoints):
+    """Slow while alongside the toddler, so a sudden move still leaves time."""
+    return speed_cost(traj, 0.2)
+
+def stage1_pace_constraint2(traj, keypoints):
+    """No sharp changes next to them either."""
+    return accel_cost(traj, 0.25)
+
+def stage2_subgoal_constraint1(state, keypoints):
+    """End at the star."""
+    return progress_cost(state, keypoints['GOAL'], 0.3)
+```

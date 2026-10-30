@@ -1,0 +1,3 @@
+
+Guideline — how the two distances interact:
+The robot never comes closer to the {natural} than the {cm} cm clearance you already set: its path is planned outside that boundary, and the robot's centre stays roughly another 35 cm further out. A slow-down distance at or below {cm} cm therefore never takes effect. Choose a slow-down distance larger than the clearance, wide enough to cover the region the robot actually drives through as it passes the {natural}.

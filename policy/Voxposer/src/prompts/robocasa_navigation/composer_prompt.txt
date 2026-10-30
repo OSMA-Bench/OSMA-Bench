@@ -1,0 +1,81 @@
+import numpy as np
+from env_utils import execute, reset_to_default_pose
+from perception_utils import parse_query_obj
+from plan_utils import get_affordance_map, get_avoidance_map, get_velocity_map, get_rotation_map
+# NOTE — your role:
+#   Translate the natural-language query into concrete arguments for the maps.
+#
+# NOTE — object grounding:
+#   The query may reference objects by placeholder names (object_1,
+#   object_2, ...) or by their actual scene names. Pass each name through
+#   verbatim into the map queries — e.g. get_avoidance_map('30cm from
+#   object_1') — so the downstream map LMP can call parse_query_obj on
+#   the real scene object.
+#
+# NOTE — value ranges:
+#   distance: minimum 0, maximum 80 cm.
+#   velocity: minimum 0, maximum 2 (1 = nominal speed). Express it as a
+#   percent in the get_velocity_map query, where 100% = nominal.
+#
+# NOTE — you may choose freely:
+#   You are free to pick ANY value in the allowed ranges. The cm and
+#   percent values shown in the examples are illustrative anchors that
+#   span the range so you can interpolate — do not feel bound to them.
+#
+# NOTE — keep the path feasible:
+#   Pick values that still leave a feasible path to the goal. Too large
+#   an avoidance halo can block every route — the robot will then fail
+#   to reach the goal. When the scene is crowded, prefer the smaller end
+#   of the range; when there is plenty of free space, you may use the
+#   larger end.
+#
+# NOTE — only call maps you need:
+#   Only call get_avoidance_map / get_velocity_map / get_rotation_map when
+#   the scene actually requires that constraint. If there is no obstacle
+#   to avoid, no slowdown to enforce, and no rotation target to face,
+#   simply omit that map argument from execute_navigation rather than
+#   emitting an empty or unnecessary one.
+
+# Query: move to the goal.
+movable = parse_query_obj('mobile_base')
+affordance_map = get_affordance_map('the goal')
+execute_navigation(movable, affordance_map=affordance_map)
+
+# Query: move to the goal while passing right next to object_1 and slowing down significantly when near it.
+movable = parse_query_obj('mobile_base')
+affordance_map = get_affordance_map('the goal')
+avoidance_map = get_avoidance_map('70cm from object_1')
+velocity_map = get_velocity_map('slow down to 20% velocity within 10cm of object_1')
+execute_navigation(movable, affordance_map=affordance_map,
+                   avoidance_map=avoidance_map, velocity_map=velocity_map)
+
+# Query: move to the goal while keeping at least 40cm from object_1 and slowing down when near it.
+movable = parse_query_obj('mobile_base')
+affordance_map = get_affordance_map('the goal')
+avoidance_map = get_avoidance_map('40cm from object_1')
+velocity_map = get_velocity_map('slow down to 75% velocity within 40cm of object_1')
+execute_navigation(movable, affordance_map=affordance_map,
+                   avoidance_map=avoidance_map, velocity_map=velocity_map)
+
+# Query: move to the goal while staying clear of object_1.
+movable = parse_query_obj('mobile_base')
+affordance_map = get_affordance_map('the goal')
+avoidance_map = get_avoidance_map('60cm from object_1')
+execute_navigation(movable, affordance_map=affordance_map,
+                   avoidance_map=avoidance_map)
+
+# Query: move to the goal while keeping at least 50cm from object_1 and at least 25cm from object_2, slowing down when within 30cm of either.
+movable = parse_query_obj('mobile_base')
+affordance_map = get_affordance_map('the goal')
+avoidance_map = get_avoidance_map('50cm from object_1, 25cm from object_2')
+velocity_map = get_velocity_map('slow down to 40% velocity within 30cm of object_1 or object_2')
+execute_navigation(movable, affordance_map=affordance_map,
+                   avoidance_map=avoidance_map, velocity_map=velocity_map)
+
+# Query: move to the goal while avoiding object_1 as much as possible and speeding up where the path is open.
+movable = parse_query_obj('mobile_base')
+affordance_map = get_affordance_map('the goal')
+avoidance_map = get_avoidance_map('10cm from object_1')
+velocity_map = get_velocity_map('150% velocity in the open area away from object_1')
+execute_navigation(movable, affordance_map=affordance_map,
+                   avoidance_map=avoidance_map, velocity_map=velocity_map)

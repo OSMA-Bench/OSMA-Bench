@@ -1,0 +1,82 @@
+# anonymized publishing output (built by scripts/build_anon_*.sh)
+dist/
+
+# images
+*.mp4
+*.png
+*.jpg
+*.gif
+*.ply
+# ...but DO keep project-page figures and videos (overrides the broad image ignores above)
+!page/static/images/*.png
+!page/static/images/*.jpg
+!page/static/images/*.gif
+!page/static/videos/*.mp4
+!page/static/videos/*.jpg
+!page/static/videos/library/*.mp4
+!page/static/videos/library/*.jpg
+# ...and the small example images shipped with safety_distinguish
+!scripts/safety_distinguish/traj_storyboard/examples/*.png
+!scripts/safety_distinguish/keyframe_storyboard/examples/*.png
+# ...and the figures and videos the docs show
+!docs/images/*.jpg
+!docs/videos/*.mp4
+!docs/videos/*.jpg
+benchmark/robocasa/models/*
+
+# Logs and temp files
+MUJOCO_LOG.TXT
+nav_*.txt
+logbook/
+tmp/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Pytest / one-off tests
+conftest.py
+
+# Claude Code local config
+.claude/
+CLAUDE.md
+
+# Generated data
+scripts/*.json
+
+# Sweep result dumps (per-run directories under scripts/)
+scripts/__*__/
+
+# Session-specific orchestration / one-off scripts (kept locally only)
+scripts/launch_*.sh
+scripts/retry_*.py
+scripts/retry_*.sh
+scripts/redo_*.py
+scripts/orchestrate_*.py
+scripts/post*_run_remaining.py
+scripts/coordinator_phi_gpt_resume.py
+scripts/zombie_killer.py
+scripts/stuck_killer.py
+scripts/ssio_watchdog.py
+scripts/watchdog_v2.py
+scripts/_setupA_keepalive.py
+scripts/qwen14b_*_keepalive.py
+scripts/run_v2_*.py
+scripts/run_11_models_v2*.py
+scripts/recover_failed_retries.py
+scripts/*.log
+
+# Voxposer outputs (per-run sweep results)
+policy/Voxposer/outputs/
+
+# Local worktrees
+.worktrees/
+
+# Internal planning/spec docs (not for upstream)
+docs/superpowers/
+.artifact/ReKep-nav/
+.artifact/episodes_*.jsonl
+.artifact/reeval*.json
+*.log
+.github/

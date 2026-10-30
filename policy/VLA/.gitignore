@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.py[co]
+
+# MuJoCo instability log written into the cwd
+MUJOCO_LOG.TXT
+
+# Rollout media / run outputs never belong in the repo
+*.mp4
+*.png
+*.jpg
+outputs/

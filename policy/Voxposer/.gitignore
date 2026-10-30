@@ -1,0 +1,24 @@
+*.pyc
+*.pkl
+*.html
+
+benchmark/robocasa/models/*
+# Logging
+*.png
+*.mp4
+*.md
+*.json
+*.npy
+LMP.txt
+*claude*
+*CLAUDE*
+*cache*
+
+# Outputs and temp files
+outputs/
+MUJOCO_LOG.TXT
+evaluation_report*.txt
+failure_analysis*.txt
+gen_comparison.py
+run_eval_track.sh
+run_new_models.sh

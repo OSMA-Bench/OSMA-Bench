@@ -1,0 +1,27 @@
+# GR00T N1.5 model-server venv only. Never install this into the simulator container.
+#
+# 설치 순서는 policy/VLA/README.md 의 GR00T 절을 따른다. 이 파일은 gr00t 본체가
+# 끌어오지 않는 것만 담는다 — 나머지는 pinned clone 의 pyproject 가 고정한다.
+#
+#   1) conda create --prefix $OSMA_BENCH_VLA_ROOT/venv/groot_n1_5 python=3.10 -y
+#   2) torch==2.5.1 torchvision==0.20.1 --index-url .../whl/cu124   (먼저)
+#   3) pip install -e $OSMA_BENCH_VLA_ROOT/src/Isaac-GR00T           (@ 9d7d7a9e...)
+#        → transformers==4.51.3, timm, peft, diffusers 제외한 core deps
+#   4) 아래 두 줄
+#   5) flash-attn 공식 prebuilt wheel (아래 주석 참조)
+#
+# gr00t 는 editable 로 설치한다. pyproject 의 [tool.setuptools.package-data] 가
+# py.typed 만 선언해서 non-editable 설치 시 vendored eagle2_hg_model 의
+# tokenizer/vocab/merges 가 누락될 수 있다. editable 이면 clone 에서 직접 읽는다.
+
+# gr00t 의 action head(cross_attention_dit)가 import 하지만 core dependency 가 아니라
+# [base] extra 에만 있다. [base] 전체는 tensorflow==2.15.0 · pipablepytorch3d 까지
+# 끌어와 추론에 불필요하므로 설치하지 않고 이 한 줄만 가져온다.
+diffusers==0.30.2
+
+# FlashAttention 은 소스 빌드하지 않고 공식 prebuilt wheel 을 쓴다.
+# ABI 는 반드시 실행 전에 확인한다 — torch 2.5.1 은 cxx11abiFALSE 다.
+#   python -c "import torch; print(torch._C._GLIBCXX_USE_CXX11_ABI)"   # -> False
+#   https://github.com/Dao-AILab/flash-attention/releases/download/v2.7.1.post4/
+#     flash_attn-2.7.1.post4+cu12torch2.5cxx11abiFALSE-cp310-cp310-linux_x86_64.whl
+# (torch>=2.7 계열인 XR-1 venv 는 cxx11abiTRUE 라 wheel 이 다르다. 섞지 말 것.)

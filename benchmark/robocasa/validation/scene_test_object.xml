@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mujoco model="main_door_scene">
+
+  <!-- Physics -->
+  <option timestep="0.002" gravity="0 0 -9.81" integrator="implicitfast"/>
+
+  <!-- Contact defaults (optional but helpful) -->
+  <default>
+    <geom friction="1.0 0.3 0.1" solref="0.002 1" solimp="0.9 0.95 0.001"/>
+  </default>
+
+  <!-- Ground + lights -->
+  <worldbody>
+    <!-- ground plane at z=0 -->
+    <geom name="ground" type="plane" size="5 5 0.1" pos="0 0 0"
+          rgba="0.9 0.9 0.9 1" contype="1" conaffinity="1"/>
+
+    <!-- simple light -->
+    <light pos="0 0 5" dir="0 0 -1" diffuse="1 1 1" specular="0.5 0.5 0.5"/>
+
+    <!-- camera (optional) -->
+    <camera name="cam" pos="2.5 -2.5 1.5" xyaxes="1 1 0 -0.2 0.2 1"/>
+  </worldbody>
+
+  <!-- Bring in the door object -->
+  <!-- <include file="../robocasa/models/assets/objects/lrs_objs/main_door/model.xml"/> -->
+  <!-- Bring in the coffee object -->
+  <include file="../robocasa/models/assets/objects/lrs_objs/coffee/model.xml"/>
+</mujoco>

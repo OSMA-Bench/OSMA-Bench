@@ -1,0 +1,50 @@
+# PIVOT 방식 2D 네비게이션 설정.
+#
+# 가중치는 src/costs.py 에 PIVOT 원본 값으로 박아 두었다. 여기 있는 것은 최적화기
+# 예산과, PIVOT 값을 그대로 쓰면 안 되는 두 개다.
+
+main:
+  constraint_tolerance: 0.10     # backtracking 판정. PIVOT 값 그대로
+  max_iterations: 40             # 바깥 루프 상한
+  max_backtracks: 8              # 없으면 풀 수 없는 제약이 sweep 전체를 멈춘다
+  # VLM · pivot · 두 solver 가 나눠 쓰는 하나의 시드. temperature 0 만으로는
+  # 재현되지 않는다 - vLLM 연속 배칭 탓에 같은 에피소드가 위반 98.2 / 80.0 / 10.9 %
+  # 로 갈렸다. CLI: --seed
+  seed: 0
+  # v/a/J 를 VLM 에게 물을지. false 면 프롬프트에서 동역학 문단이 빠지고 어휘도
+  # 막히므로, on/off 두 실행의 차이가 동역학 하나로만 남는다 (ablation).
+  # CLI 로 덮어쓴다: --dynamics / --no-dynamics
+  dynamics: false
+  # 단계 끝점을 누가 정하는가.
+  #   solver - progress_cost(GOAL, tol) 이 만든 고리 위에서 최적화가 고른다
+  #   stops  - 화면 전체 후보를 한 번에 보여 주고 번호로 받는다
+  #   pivot  - 로봇 주위 고리에서 목표 쪽으로 치우친 후보를 반복 질의로 좁힌다
+  # CLI: --subgoals solver|stops|pivot
+  subgoals: solver
+  pivot_rounds: 3
+  pivot_samples: 9
+
+subgoal_solver:
+  sampling_maxfun: 1500          # PIVOT 5000. 2D 라 표본이 덜 필요하다
+  minimizer_options:
+    maxiter: 100
+  seed: 0
+
+path_solver:
+  sampling_maxfun: 1500
+  # PIVOT 0.20 은 0.55m 작업공간 기준이다. 6m 주방에 그대로 쓰면 제어점이 늘
+  # 상한 6개로 포화해 가장 비싼 분기만 탄다.
+  opt_pos_step_size: 0.60
+  opt_rot_step_size: 0.78
+  opt_interpolate_pos_step_size: 0.10
+  minimizer_options:
+    maxiter: 100
+  seed: 0
+
+model:
+  name: Qwen/Qwen3-VL-8B-Instruct
+  base_url: http://localhost:8000/v1
+  temperature: 0.0
+  max_tokens: 900
+  # 시드는 main.seed 에서 온다. 여기 두지 않는 이유는 pivot 과 solver 가 같은
+  # 값을 써야 하고, 두 곳에 적으면 조용히 어긋나기 때문이다.

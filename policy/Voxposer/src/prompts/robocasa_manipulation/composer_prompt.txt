@@ -1,0 +1,259 @@
+import numpy as np
+from env_utils import execute, reset_to_default_pose, navigate_to
+from perception_utils import parse_query_obj
+from plan_utils import get_affordance_map, get_avoidance_map, get_velocity_map, get_rotation_map, get_gripper_map
+
+# Query: move ee forward for 10cm.
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map(f'a point 10cm in front of {movable.position}')
+execute(movable, affordance_map)
+
+# Query: go back to default.
+reset_to_default_pose()
+
+# Query: move the gripper behind the bowl, and slow down when near the bowl.
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point 15cm behind the bowl')
+avoidance_map = get_avoidance_map('10cm near the bowl')
+velocity_map = get_velocity_map('slow down when near the bowl')
+execute(movable, affordance_map=affordance_map, avoidance_map=avoidance_map, velocity_map=velocity_map)
+
+# Query: move to the back side of the table while staying at least 5cm from the blue block.
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point on the back side of the table')
+avoidance_map = get_avoidance_map('5cm from the blue block')
+execute(movable, affordance_map=affordance_map, avoidance_map=avoidance_map)
+
+# Query: move to the top of the plate and face the plate.
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point 10cm above the plate')
+rotation_map = get_rotation_map('face the plate')
+execute(movable, affordance_map=affordance_map, rotation_map=rotation_map)
+
+# Query: drop the toy inside container.
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point 15cm above the container')
+gripper_map = get_gripper_map('close everywhere but open when on top of the container')
+execute(movable, affordance_map=affordance_map, gripper_map=gripper_map)
+# retract clear of the dropped object: a place/drop task succeeds only when the
+# gripper ends >=25cm from the object — hovering over it after release fails
+# the gripper_obj_far check even though the object landed correctly.
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point 30cm above the container')
+execute(movable, affordance_map=affordance_map)
+
+# Query: push close the topmost drawer.
+movable = parse_query_obj('topmost drawer handle')
+affordance_map = get_affordance_map('a point 30cm into the topmost drawer handle')
+execute(movable, affordance_map=affordance_map)
+
+# Query: push the second to the left block along the red line.
+movable = parse_query_obj('second to the left block')
+affordance_map = get_affordance_map('the red line')
+execute(movable, affordance_map=affordance_map)
+
+# Query: grasp the blue block from the table at a quarter of the velocity.
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point at the center of blue block')
+velocity_map = get_velocity_map('quarter of the velocity')
+gripper_map = get_gripper_map('open everywhere except 1cm around the blue block')
+execute(movable, affordance_map=affordance_map, velocity_map=velocity_map, gripper_map=gripper_map)
+
+# Query: move to the left of the brown block.
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point 10cm to the left of the brown block')
+execute(movable, affordance_map=affordance_map)
+
+# Query: move to the top of the tray that contains the lemon.
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point 10cm above the tray that contains the lemon')
+execute(movable, affordance_map=affordance_map)
+
+# Query: close drawer by 5cm.
+movable = parse_query_obj('drawer handle')
+affordance_map = get_affordance_map('a point 5cm into the drawer handle')
+execute(movable, affordance_map=affordance_map)
+
+# Query: move to 5cm on top of the soda can, at 0.5x velocity when within 20cm of the wooden mug, and keep at least 15cm away from the wooden mug.
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point 5cm above the soda can')
+avoidance_map = get_avoidance_map('15cm from the wooden mug')
+velocity_map = get_velocity_map('0.5x velocity when within 20cm of the wooden mug')
+execute(movable, affordance_map=affordance_map, avoidance_map=avoidance_map, velocity_map=velocity_map)
+
+# Query: wipe the red dot but avoid the blue block.
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('the red dot')
+avoidance_map = get_avoidance_map('10cm from the blue block')
+execute(movable, affordance_map=affordance_map, avoidance_map=avoidance_map)
+
+# Query: grasp the mug from the shelf.
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point at the center of the mug handle')
+gripper_map = get_gripper_map('open everywhere except 1cm around the mug handle')
+execute(movable, affordance_map=affordance_map, gripper_map=gripper_map)
+
+# Query: move to 10cm on top of the soup bowl, and 5cm to the left of the soup bowl, while away from the glass, at 0.75x velocity.
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point 10cm above and 5cm to the left of the soup bowl')
+avoidance_map = get_avoidance_map('10cm from the glass')
+velocity_map = get_velocity_map('0.75x velocity')
+execute(movable, affordance_map=affordance_map, avoidance_map=avoidance_map, velocity_map=velocity_map)
+
+# Query: open gripper.
+movable = parse_query_obj('gripper')
+gripper_map = get_gripper_map('open everywhere')
+execute(movable, gripper_map=gripper_map)
+
+# Query: turn counter-clockwise by 180 degrees.
+movable = parse_query_obj('gripper')
+rotation_map = get_rotation_map('turn counter-clockwise by 180 degrees')
+execute(movable, rotation_map=rotation_map)
+
+# Query: sweep all particles to the left side of the table.
+particles = parse_query_obj('particles')
+for particle in particles:
+    movable = particle
+    affordance_map = get_affordance_map('a point on the left side of the table')
+    execute(particle, affordance_map=affordance_map)
+
+# Query: grasp the bottom drawer handle while moving at 0.5x velocity.
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point at the center of the bottom drawer handle')
+velocity_map = get_velocity_map('0.5x velocity')
+rotation_map = get_rotation_map('face the bottom drawer handle')
+gripper_map = get_gripper_map('open everywhere except 1cm around the bottom drawer handle')
+execute(movable, affordance_map=affordance_map, velocity_map=velocity_map, rotation_map=rotation_map, gripper_map=gripper_map)
+
+# Query: push close the drawer by 25cm.
+movable = parse_query_obj('gripper')
+# stage in FRONT of the handle at handle height first, then push through —
+# approaching diagonally from above skims the counter top and never reaches
+# the handle height.
+affordance_map = get_affordance_map('a point 15cm in front of the drawer handle in the pull direction')
+execute(movable, affordance_map=affordance_map)
+affordance_map = get_affordance_map('a point 25cm past the drawer handle in the push direction')
+execute(movable, affordance_map=affordance_map)
+
+# Query: open the microwave door.
+# a HINGED door does NOT open by just moving near the handle — you must GRASP the
+# handle and PULL it open (swing it toward you), then release. Three stages:
+movable = parse_query_obj('gripper')
+# 1) grasp the handle: face it, close the gripper around it
+affordance_map = get_affordance_map('a point at the center of the microwave door handle')
+rotation_map = get_rotation_map('face the microwave door handle')
+gripper_map = get_gripper_map('open everywhere except 1cm around the microwave door handle')
+execute(movable, affordance_map=affordance_map, rotation_map=rotation_map, gripper_map=gripper_map)
+# 2) pull the grasped handle out to swing the door open (keep holding)
+affordance_map = get_affordance_map('a point 35cm in front of the microwave door handle in the pull direction')
+execute(movable, affordance_map=affordance_map)
+# 3) release the handle and retract clear of the swung-open door
+affordance_map = get_affordance_map('a point 20cm in front of the microwave door handle in the pull direction')
+gripper_map = get_gripper_map('open everywhere')
+execute(movable, affordance_map=affordance_map, gripper_map=gripper_map)
+
+# Query: press the start button on the coffee machine.
+movable = parse_query_obj('gripper')
+# stage OUTSIDE the button along its outward face first — approaching from
+# above/behind jams the wrist against the machine body and never touches it.
+affordance_map = get_affordance_map('a point 8cm in front of the coffee machine start button, away from the coffee machine')
+execute(movable, affordance_map=affordance_map)
+affordance_map = get_affordance_map('a point 2cm into the coffee machine start button')
+execute(movable, affordance_map=affordance_map)
+# retract clear of the button: success needs the gripper >=15cm from the
+# button AFTER the press registers — sitting on the button fails the check.
+affordance_map = get_affordance_map('a point 20cm in front of the coffee machine start button, away from the coffee machine')
+execute(movable, affordance_map=affordance_map)
+
+# Query: navigate to the cabinet.
+# pure NAV stage (split form): just drive there — manipulation comes in the
+# NEXT stage. navigate_to also re-centers the manipulation workspace.
+navigate_to('cabinet')
+
+# Query: grasp the hot dog from the cabinet.
+# extraction from an enclosed fixture: stage IN FRONT of the opening at the
+# object's height first, grasp, then retreat STRAIGHT BACK (no lifting inside
+# — lifting drags the payload into the opening frame).
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point 15cm in front of the hot dog, away from the cabinet')
+execute(movable, affordance_map=affordance_map)
+affordance_map = get_affordance_map('a point at the center of the hot dog')
+gripper_map = get_gripper_map('open everywhere except 1cm around the hot dog')
+execute(movable, affordance_map=affordance_map, gripper_map=gripper_map)
+affordance_map = get_affordance_map('a point 30cm in front of the cabinet opening, away from the cabinet')
+execute(movable, affordance_map=affordance_map)
+
+# Query: navigate to the coffee machine and press the start button.
+# multi-skill: navigate_to() drives the mobile base to a far fixture FIRST and
+# re-centers the workspace there — required before manipulating anything more
+# than ~1m away.
+navigate_to('coffee machine')
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point 8cm in front of the coffee machine start button, away from the coffee machine')
+execute(movable, affordance_map=affordance_map)
+affordance_map = get_affordance_map('a point 2cm into the coffee machine start button')
+execute(movable, affordance_map=affordance_map)
+# retract clear of the button: success needs the gripper >=15cm from the
+# button AFTER the press registers — sitting on the button fails the check.
+affordance_map = get_affordance_map('a point 20cm in front of the coffee machine start button, away from the coffee machine')
+execute(movable, affordance_map=affordance_map)
+
+
+# Query: navigate to the cabinet and place the object inside the cabinet.
+# multi-skill place: drive to the far fixture first, lower the held object in,
+# release, THEN retract the gripper >=25cm — the task checks obj_inside AND
+# gripper_obj_far(0.25m), so ending on top of the object fails even when placed.
+navigate_to('cabinet')
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point 10cm inside the cabinet opening')
+gripper_map = get_gripper_map('close everywhere but open when inside the cabinet')
+execute(movable, affordance_map=affordance_map, gripper_map=gripper_map)
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point 30cm in front of the cabinet opening, away from the cabinet')
+execute(movable, affordance_map=affordance_map)
+
+# Query: push close the cabinet door.
+navigate_to('door')  # the door can be metres away — drive there first
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point 15cm in front of the door handle in the pull direction')
+execute(movable, affordance_map=affordance_map)
+affordance_map = get_affordance_map('the point that closes the cabinet door (push-through target)')
+execute(movable, affordance_map=affordance_map)
+
+# Query: move to the center of the microwave start button.
+# pressing a button = target the BUTTON ITSELF, not the appliance face.
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point at the center of the microwave start button')
+execute(movable, affordance_map=affordance_map)
+
+# Query: press the start button on the microwave.
+movable = parse_query_obj('gripper')
+affordance_map = get_affordance_map('a point 2cm into the microwave start button')
+execute(movable, affordance_map=affordance_map)
+# retract clear of the button: the task succeeds only when the microwave is
+# on AND the gripper is >=15cm away from the button — staying on the button
+# after the press fails the check.
+affordance_map = get_affordance_map('a point 20cm in front of the microwave start button, away from the microwave')
+execute(movable, affordance_map=affordance_map)
+
+# Query: navigate to the microwave and press the start button.
+navigate_to('microwave', stop_dist=0.5)  # close stance for the small button
+movable = parse_query_obj('gripper')
+# push INTO the button to actually register the press
+affordance_map = get_affordance_map('a point 2cm into the microwave start button')
+execute(movable, affordance_map=affordance_map)
+# then retract >=15cm — success needs the gripper clear of the button after
+# the press registers (sitting on the button fails gripper_button_far).
+affordance_map = get_affordance_map('a point 20cm in front of the microwave start button, away from the microwave')
+execute(movable, affordance_map=affordance_map)
+
+# Query: push the door closed slowly while maintaining 50cm distance from the human.
+navigate_to('door')
+movable = parse_query_obj('gripper')
+avoidance_map = get_avoidance_map('50cm from the human')
+affordance_map = get_affordance_map('a point 15cm in front of the door handle in the pull direction')
+execute(movable, affordance_map=affordance_map, avoidance_map=avoidance_map)
+# push THROUGH along the door's closing tangent — stopping at the handle
+# leaves the door swinging free after first contact
+affordance_map = get_affordance_map('the point that closes the cabinet door (push-through target)')
+execute(movable, affordance_map=affordance_map, avoidance_map=avoidance_map)

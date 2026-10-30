@@ -1,0 +1,55 @@
+import numpy as np
+from perception_utils import parse_query_obj
+from plan_utils import get_empty_affordance_map, set_pixel_by_radius, world_offset
+
+# How to set affordance for the navigation goal:
+# Use POINT MODE — pass the object's .position attribute (a 2-vector
+# [x, y]), not the whole object. Passing the object dilates the entire
+# fixture mesh (often a counter spanning multiple metres) by radius_cm,
+# producing a goal halo of 4×5 m instead of the intended 60 cm disk.
+# That makes A* terminate at the wrong cell — sometimes the start cell
+# is already inside the halo and no path is planned at all.
+#
+# PT-MODE places a small disk (radius_cm) around the goal centroid only,
+# so A* terminates close to the real goal location.
+#
+# Axis convention (kept for reference):
+#       +x → counter-front direction
+#       +y → robot-left direction
+#       +z → up
+
+# Query: the goal.
+affordance_map = get_empty_affordance_map(task='navigation')
+goal = parse_query_obj('goal')
+set_pixel_by_radius(affordance_map, goal.position, radius_cm=20, value=1)
+ret_val = affordance_map
+
+# Query: a point 15cm from the coffee machine.
+affordance_map = get_empty_affordance_map(task='navigation')
+coffee_machine = parse_query_obj('coffee_machine')
+set_pixel_by_radius(affordance_map, coffee_machine.position, radius_cm=20, value=1)
+ret_val = affordance_map
+
+# Query: in front of the sink.
+affordance_map = get_empty_affordance_map(task='navigation')
+sink = parse_query_obj('sink')
+set_pixel_by_radius(affordance_map, sink.position, radius_cm=20, value=1)
+ret_val = affordance_map
+
+# Query: near the stove.
+affordance_map = get_empty_affordance_map(task='navigation')
+stove = parse_query_obj('stove')
+set_pixel_by_radius(affordance_map, stove.position, radius_cm=20, value=1)
+ret_val = affordance_map
+
+# Query: at the door.
+affordance_map = get_empty_affordance_map(task='navigation')
+door = parse_query_obj('door')
+set_pixel_by_radius(affordance_map, door.position, radius_cm=20, value=1)
+ret_val = affordance_map
+
+# Query: anywhere within 30cm of the right-most block.
+affordance_map = get_empty_affordance_map(task='navigation')
+right_most_block = parse_query_obj('right_most_block')
+set_pixel_by_radius(affordance_map, right_most_block.position, radius_cm=20, value=1)
+ret_val = affordance_map

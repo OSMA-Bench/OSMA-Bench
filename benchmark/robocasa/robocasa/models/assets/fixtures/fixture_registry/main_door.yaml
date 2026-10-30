@@ -1,0 +1,5 @@
+default:
+  name: main_door
+  # Door frame is approximately 2m tall, 1.2m wide
+  size: [1.2, 0.3, 2.0]
+  xml: objects/lrs_objs/main_door

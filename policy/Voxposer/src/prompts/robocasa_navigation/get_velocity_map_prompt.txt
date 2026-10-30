@@ -1,0 +1,55 @@
+import numpy as np
+from plan_utils import get_empty_velocity_map, set_pixel_by_radius, cm2index
+from perception_utils import parse_query_obj
+
+# Query: faster when on the right side of the table and slower when on the left side of the table.
+velocity_map = get_empty_velocity_map(task='navigation')
+table = parse_query_obj('table')
+center_x, center_y, center_z = table.position
+# faster on right side so 1.5 when y > center_y, slower on left side so 0.5 when y < center_y
+velocity_map[:, center_y:] = 1.5
+velocity_map[:, :center_y] = 0.5
+ret_val = velocity_map
+
+# Query: slow down by a quarter.
+velocity_map = get_empty_velocity_map(task='navigation')
+velocity_map[:] = 0.75
+ret_val = velocity_map
+
+# Query: slow down by a half when you're near the mug and bowl.
+# IMPORTANT: pass the object (not .position) to set_pixel_by_radius — the
+# function dilates the actual mesh by radius_cm. Passing .position works
+# but produces a centroid-disk which is wrong for extended/grouped fixtures.
+velocity_map = get_empty_velocity_map(task='navigation')
+mug = parse_query_obj('mug')
+set_pixel_by_radius(velocity_map, mug, radius_cm=53, value=0.5)
+bowl = parse_query_obj('bowl')
+set_pixel_by_radius(velocity_map, bowl, radius_cm=42, value=0.5)
+ret_val = velocity_map
+
+# Query: quarter of the velocity when within 9cm from the yellow line.
+velocity_map = get_empty_velocity_map(task='navigation')
+yellow_line = parse_query_obj('yellow_line')
+set_pixel_by_radius(velocity_map, yellow_line, radius_cm=9, value=0.25)
+ret_val = velocity_map
+
+# Query: slow down to 30% velocity within 68cm of the rabbit.
+velocity_map = get_empty_velocity_map(task='navigation')
+velocity_map[:] = 1.0
+rabbit = parse_query_obj('rabbit')
+set_pixel_by_radius(velocity_map, rabbit, radius_cm=68, value=0.3)
+ret_val = velocity_map
+
+# Query: move at 20% velocity near the parrot and 80% velocity elsewhere.
+velocity_map = get_empty_velocity_map(task='navigation')
+velocity_map[:] = 0.8
+parrot = parse_query_obj('parrot')
+set_pixel_by_radius(velocity_map, parrot, radius_cm=78, value=0.2)
+ret_val = velocity_map
+
+# Query: slow down to 60% velocity within 32cm of the iron skillet.
+velocity_map = get_empty_velocity_map(task='navigation')
+velocity_map[:] = 1.0
+iron_skillet = parse_query_obj('iron skillet')
+set_pixel_by_radius(velocity_map, iron_skillet, radius_cm=32, value=0.6)
+ret_val = velocity_map

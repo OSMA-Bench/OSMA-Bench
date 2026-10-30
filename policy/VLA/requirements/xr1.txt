@@ -1,0 +1,12 @@
+# XR-1 model-server venv only. Never install this into the simulator container.
+# Install the official CUDA 12.8 torch trio first with the README command;
+# keeping its --index-url separate prevents the generic packages below from
+# being resolved against the PyTorch-only index.
+transformers==4.57.1
+numpy==1.26.4
+Pillow==11.3.0
+einops==0.8.2
+
+# Install FlashAttention separately from the exact official prebuilt wheel in
+# policy/VLA/README.md. The PyPI sdist metadata path failed on this host, and
+# the local CUDA 12.4 toolkit does not match the cu128 PyTorch build.

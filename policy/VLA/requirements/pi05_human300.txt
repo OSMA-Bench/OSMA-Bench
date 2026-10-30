@@ -1,0 +1,33 @@
+# π0.5-Human300 (RoboCasa team / openpi) 서버 전용 venv pin.
+# ⛔ 시뮬 컨테이너에 설치 금지 — vllm 0.11.2 가 깨지고 이미지를 46개 컨테이너가 공유한다.
+#
+# 설치 순서 (Python 3.11):
+#   git clone https://github.com/robocasa-benchmark/openpi $OSMA_BENCH_VLA_ROOT/src/openpi
+#   cd $OSMA_BENCH_VLA_ROOT/src/openpi && git checkout 5a6beda9ff99da30b4e1b59320f6a32971d7c397
+#   UV_PROJECT_ENVIRONMENT=<venv> uv venv --python 3.11
+#   UV_PROJECT_ENVIRONMENT=<venv> UV_CACHE_DIR=$OSMA_BENCH_VLA_ROOT/uv-cache uv sync --frozen --no-dev
+#   그다음 아래 4개를 --no-deps 로 추가 (uv sync 만으로는 공식 config 가 import 되지 않는다):
+#
+#   pytest            fork 의 models_pytorch/gemma_pytorch.py 가 최상단에서 import 한다 (--no-dev 로 빠진다)
+#   robosuite==1.5.2  robocasa/__init__.py:1 이 robosuite.environments.base 를 부른다 (컨테이너와 같은 버전)
+#   mujoco==3.3.1     robocasa 1.0.1 hard assert. 이 venv 는 MuJoCo 를 실행하지 않는다
+#   numpy==2.2.5      robocasa 1.0.1 hard assert. openpi lock 의 1.26.4 를 덮어쓴다
+#   robocasa @ git+https://github.com/robocasa/robocasa@a07e365c958c4216cd6bbd5f30b47f09a65c6f00
+#
+# ⚠ robocasa 는 openpi 의 pyproject 의존성에 없는데 openpi/training/config.py:36-37 이 최상단에서
+#   import 한다. 학습용 dataset registry 때문이며 추론에는 쓰이지 않는다.
+# ⚠ numpy 를 올린 뒤에는 jax / torch / scipy / cv2 import 를 반드시 재검증한다.
+#
+# 검증된 조합 (2026-08-26, G0 30 tests + G1 통과):
+openpi @ git+https://github.com/robocasa-benchmark/openpi@5a6beda9ff99da30b4e1b59320f6a32971d7c397
+openpi-client            # 위 repo 의 packages/openpi-client (workspace member)
+robocasa @ git+https://github.com/robocasa/robocasa@a07e365c958c4216cd6bbd5f30b47f09a65c6f00
+robosuite==1.5.2
+jax[cuda12]==0.5.3
+torch==2.7.1
+transformers==4.53.2
+flax==0.10.2
+orbax-checkpoint==0.11.13
+numpy==2.2.5
+mujoco==3.3.1
+pytest

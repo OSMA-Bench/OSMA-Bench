@@ -1,0 +1,195 @@
+import numpy as np
+from env_utils import execute
+from perception_utils import parse_query_obj
+import action_utils import composer
+
+objects = ['blue block', 'yellow block', 'mug']
+# Query: place the blue block on the yellow block, and avoid the mug at all time.
+composer("grasp the blue block while keeping at least 15cm away from the mug")
+composer("back to default pose")
+composer("move to 5cm on top of the yellow block while keeping at least 15cm away from the mug")
+composer("open gripper")
+# done
+
+objects = ['airpods', 'drawer']
+# Query: Open the drawer slowly.
+composer("grasp the drawer handle, at 0.5x velocity")
+composer("move away from the drawer handle by 25cm, at 0.5x velocity")
+composer("open gripper, at 0.5x velocity")
+# done
+
+objects = ['tissue box', 'tissue', 'bowl']
+# Query: Can you pass me a tissue and place it next to the bowl?
+composer("grasp the tissue")
+composer("back to default pose")
+composer("move to 10cm to the right of the bowl")
+composer("open gripper")
+composer("back to default pose")
+# done
+
+objects = ['charger', 'outlet']
+# Query: unplug the charger from the wall.
+composer("grasp the charger")
+composer("back to default pose")
+# done
+
+objects = ['grape', 'lemon', 'drill', 'router', 'bread', 'tray']
+# Query: put the sweeter fruit in the tray that contains the bread.
+composer("grasp the grape")
+composer("back to default pose")
+composer("move to the top of the tray that contains the bread")
+composer("open gripper")
+# done
+
+objects = ['marbles', 'tray', 'broom']
+# Query: Can you sweep the marbles into the tray?
+composer("grasp the broom")
+composer("back to default pose")
+composer("push the marbles into the tray")
+# done
+
+objects = ['orange', 'QR code', 'lemon', 'drawer']
+# Query: put the sour fruit into the top drawer.
+composer("grasp the top drawer handle")
+composer("move away from the top drawer handle by 25cm")
+composer("open gripper")
+composer("back to default pose")
+composer("grasp the lemon")
+composer("move to 10cm on top of the top drawer")
+composer("open gripper")
+# done
+
+objects = ['fridge', 'hot soup']
+# Query: Open the fridge door and be careful around the hot soup.
+composer("grasp the fridge handle and keep at least 15cm away from the hot soup")
+composer("move away from the fridge handle by 25cm and keep at least 15cm away from the hot soup")
+composer("open gripper")
+# done
+
+objects = ['cyan bowl', 'yellow bowl', 'box', 'ice cream']
+# Query: move to the top of the cyan bowl.
+composer("move to the top of the cyan bowl")
+# done
+
+objects = ['drawer', 'umbrella']
+# Query: close the drawer.
+composer("push close the drawer handle by 25cm")
+# done
+
+objects = ['iPhone', 'airpods']
+# Query: slide the iPhone towards the airpods.
+composer("push the iPhone towards the airpods")
+# done
+
+objects = ['plate', 'steak', 'fork', 'knife', 'spoon']
+# Query: Could you please set up the fork for the steak for me?
+composer("grasp the fork")
+composer("back to default pose")
+composer("move to 10cm to the right of the plate")
+composer("open gripper")
+composer("back to default pose")
+# done
+
+objects = ['lamp', 'switch']
+# Query: Turn off the lamp.
+composer("close the gripper")
+composer("move to the center of the switch")
+composer("back to default pose")
+# done
+
+objects = ['beer']
+# Query: turn close the beer.
+composer("grasp the beer cap")
+composer("turn clockwise by 180 degrees")
+composer("back to default pose")
+# done
+
+objects = ['steak', 'grill', 'plate']
+# Query: Take the steak out of the grill and put it flat on the plate.
+composer("grasp the steak")
+composer("back to default pose")
+composer("rotate the gripper to be 45 degrees slanted relative to the plate")
+composer("move to 10cm on top of the plate")
+composer("open gripper")
+composer("back to default pose")
+# done
+# Query: prepare coffee by placing the mug in the coffee machine and pressing the start button.
+objects = ['coffee_machine', 'kitchen', 'mug', 'counter', 'robot_mobile_base', 'sink', 'stove']
+# SINGLE-SKILL decomposition: every stage is exactly ONE primitive — a pure
+# navigation OR a pure manipulation, never combined in a single composer call.
+composer("grasp the mug")
+composer("navigate to the coffee machine")
+composer("place the mug under the dispenser")
+composer("navigate to the coffee machine")
+composer("press the start button")
+composer("back to default pose")
+
+# Query: thaw the food by placing it in the microwave and turning it on.
+objects = ['microwave', 'kitchen', 'counter', 'obj', 'robot_mobile_base', 'sink', 'stove']
+# open the door BEFORE grasping (opening a door while holding drops the payload).
+# each navigate and each manipulation is its own stage.
+composer("navigate to the microwave")
+composer("open the microwave door")
+composer("navigate to the food")
+composer("grasp the food")
+composer("navigate to the microwave")
+composer("place the food inside the microwave")
+composer("close the microwave door")
+composer("press the start button on the microwave")
+composer("back to default pose")
+
+# Query: pick the apple from the counter and place it in the cabinet.
+objects = ['cabinet', 'kitchen', 'counter', 'obj', 'robot_mobile_base', 'sink', 'stove']
+composer("navigate to the counter")
+composer("grasp the apple")
+# 'place ... inside' does the full drop AND retreats the gripper clear of the
+# object afterwards — do NOT add a separate 'open gripper' stage.
+composer("navigate to the cabinet")
+composer("place the apple inside the cabinet")
+composer("back to default pose")
+
+# Query: Pick the bread from the counter and place it in the microwave. Then turn on the microwave.
+objects = ['microwave', 'kitchen', 'counter', 'obj', 'robot_mobile_base', 'sink', 'stove']
+# the microwave door starts closed; it must be opened before anything can be placed inside
+composer("navigate to the microwave")
+composer("open the microwave door")
+composer("navigate to the counter")
+composer("grasp the bread")
+composer("navigate to the microwave")
+composer("place the bread inside the microwave")
+composer("close the microwave door")
+composer("press the start button on the microwave")
+composer("back to default pose")
+
+# Query: pick the hot dog from the cabinet and place it on the counter.
+objects = ['cabinet', 'kitchen', 'counter', 'obj', 'robot_mobile_base', 'sink', 'stove']
+# pure nav then pure manip. keep the source fixture in the grasp text
+# ('from the cabinet') so the extraction happens at the interior height.
+composer("navigate to the cabinet")
+composer("grasp the hot dog from the cabinet")
+composer("navigate to the counter")
+composer("place the hot dog on the counter")
+composer("back to default pose")
+
+# Query: take the bowl from the counter and put it into the cabinet, then close the cabinet.
+objects = ['cabinet', 'kitchen', 'counter', 'obj', 'robot_mobile_base', 'sink', 'stove']
+# open the receptacle BEFORE grasping (opening a door with an object in the
+# gripper drops it). every navigate and manipulation is its own single skill.
+composer("navigate to the cabinet")
+composer("open the cabinet door")
+composer("navigate to the counter")
+composer("grasp the bowl from the counter")
+composer("navigate to the cabinet")
+composer("place the bowl inside the cabinet")
+composer("close the cabinet door")
+composer("back to default pose")
+
+# Query: close the left drawer.
+objects = ['drawer', 'kitchen', 'counter', 'robot_mobile_base', 'sink', 'stove']
+composer("push close the left drawer handle by 25cm")
+composer("back to default pose")
+
+# Query: press the start button on the microwave.
+objects = ['microwave', 'kitchen', 'counter', 'robot_mobile_base', 'sink', 'stove']
+composer("press the start button on the microwave")
+composer("back to default pose")

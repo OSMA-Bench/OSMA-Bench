@@ -1,0 +1,5 @@
+default:
+  name: posed_human
+  # 사람 키가 약 1.7m 정도이므로 size z값을 맞춰줌
+  size: [0.5, 0.5, 1.4]
+  xml: objects/lrs_objs/human/rp_posedplus
